@@ -1,43 +1,40 @@
 // Function to format file size in a human-readable format (KB, MB, GB, etc.)
 function formatFileSize(sizeInBytes) {
   if (sizeInBytes < 1024) {
-    return `${sizeInBytes} Bytes`;  // If file size is less than 1KB, show Bytes
+    return `${sizeInBytes} Bytes`; // If file size is less than 1KB, show Bytes
   } else if (sizeInBytes < 1024 * 1024) {
-    return `${(sizeInBytes / 1024).toFixed(2)} KB`;  // If file size is less than 1MB, show KB
+    return `${(sizeInBytes / 1024).toFixed(2)} KB`; // If file size is less than 1MB, show KB
   } else if (sizeInBytes < 1024 * 1024 * 1024) {
-    return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;  // If file size is less than 1GB, show MB
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`; // If file size is less than 1GB, show MB
   } else {
-    return `${(sizeInBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;  // If file size is larger than 1GB, show GB
+    return `${(sizeInBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`; // If file size is larger than 1GB, show GB
   }
 }
 
 // Function to handle file upload
 function uploadFile(event) {
-  event.preventDefault();  // Prevent default form submission behavior
+  event.preventDefault(); // Prevent default form submission behavior
 
   const fileInput = document.getElementById('fileInput');
   const formData = new FormData();
-  
-  // Check if there's a file selected
+
   if (fileInput.files.length > 0) {
     const files = fileInput.files;
-    // Append all selected files to formData
     Array.from(files).forEach(file => {
-      formData.append('files', file);  // Append each file
+      formData.append('files', file);
     });
 
-    // Send the files to the server
     fetch('/upload', {
       method: 'POST',
       body: formData,
     })
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
+        if (data.files && data.files.length > 0) { // Check if files are uploaded
           alert('Files uploaded successfully!');
-          loadFileList();  // Reload the file list after a successful upload
+          loadFileList();
         } else {
-          alert('Failed to upload files!');
+          alert(data.message || 'Failed to upload files!');
         }
       })
       .catch(error => {
@@ -59,7 +56,7 @@ function deleteFile(fileName, listItem) {
       .then(data => {
         if (data.success) {
           alert('File deleted successfully!');
-          listItem.remove();  // Remove the file item from the list
+          listItem.remove(); // Remove the file item from the list
         } else {
           alert(data.message || 'Failed to delete file!');
         }
@@ -73,11 +70,11 @@ function deleteFile(fileName, listItem) {
 
 // Load uploaded files and display them
 function loadFileList() {
-  fetch('/uploads')  // Fetch the list of files from the server
+  fetch('/uploads') // Fetch the list of files from the server
     .then(response => response.json())
     .then(files => {
       const fileList = document.getElementById('fileList');
-      fileList.innerHTML = '';  // Clear the list before adding new items
+      fileList.innerHTML = ''; // Clear the list before adding new items
       files.forEach(file => {
         const listItem = document.createElement('li');
         
@@ -96,7 +93,7 @@ function loadFileList() {
         // Download button
         const downloadButton = document.createElement('button');
         downloadButton.textContent = 'Download';
-        downloadButton.className = 'download-button';  // Add class for styling
+        downloadButton.className = 'download-button'; // Add class for styling
         downloadButton.onclick = () => {
           window.location.href = file.downloadUrl; // Trigger file download
         };
@@ -104,7 +101,7 @@ function loadFileList() {
         // Delete button
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'delete-button';  // Add class for styling
+        deleteButton.className = 'delete-button'; // Add class for styling
         deleteButton.onclick = () => {
           // Call delete function with file name and list item
           deleteFile(file.name, listItem);
@@ -112,7 +109,7 @@ function loadFileList() {
 
         // Append elements to the list item
         listItem.appendChild(fileName);
-        listItem.appendChild(document.createElement('br'));  // Line break
+        listItem.appendChild(document.createElement('br')); // Line break
         listItem.appendChild(uploadDate);
         listItem.appendChild(document.createElement('br'));
         listItem.appendChild(fileSize);
