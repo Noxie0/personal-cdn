@@ -9,10 +9,25 @@ const app = express();
 // Catch uncaught exceptions and display errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  process.exit(1);  // Exit with failure status code
+  process.exit(1); // Exit with failure status code
 });
 
 console.log("Server is starting...");
+
+// Function to generate a unique file name if a file with the same name already exists
+function generateUniqueFileName(dir, originalName) {
+  const ext = path.extname(originalName); // Extract file extension
+  const baseName = path.basename(originalName, ext); // Extract base name
+  let newName = originalName; // Start with the original name
+  let counter = 1;
+
+  while (fs.existsSync(path.join(dir, newName))) {
+    newName = `${baseName}-${counter}${ext}`; // Append counter to the base name
+    counter += 1; // Increment counter
+  }
+
+  return newName; // Return the unique file name
+}
 
 // Set up storage engine for uploaded files
 const storage = multer.diskStorage({
@@ -25,7 +40,8 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname);  // Keep the original name of the file
+    const uniqueName = generateUniqueFileName('./uploads', file.originalname); // Generate unique file name
+    cb(null, uniqueName); // Use the unique name for saving the file
   },
 });
 
@@ -38,12 +54,15 @@ app.use('/uploads', express.static('uploads'));
 
 // Endpoint to upload files
 app.post('/upload', upload.array('files', 10), (req, res) => {
-  if (!req.files) {
-    return res.status(400).json({ message: 'No files uploaded.' });
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No files uploaded.' });
+    }
+    res.json({ success: true, message: 'Files uploaded successfully!', files: req.files });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
   }
-
-  console.log("Files uploaded:", req.files);  // Debug log
-  res.json({ message: 'Files uploaded successfully!', files: req.files });
 });
 
 // Endpoint to get the list of uploaded files
@@ -53,22 +72,21 @@ app.get('/uploads', (req, res) => {
       return res.status(500).json({ message: 'Failed to read uploaded files.' });
     }
 
-    // Get details for each file
     const fileDetails = files.map(file => {
       const filePath = path.join('./uploads', file);
       const stats = fs.statSync(filePath);
-      const uploadDate = new Date(stats.mtime).toLocaleString(); // Get last modified time as upload date
-      const fileSize = stats.size; // File size in bytes
+      const uploadDate = new Date(stats.mtime).toLocaleString();
+      const fileSize = stats.size;
 
       return {
         name: file,
         uploadDate: uploadDate,
         fileSize: fileSize,
-        downloadUrl: `/uploads/${file}`
+        downloadUrl: `/uploads/${file}`,
       };
     });
 
-    res.json(fileDetails); // Send file details as JSON response
+    res.json(fileDetails);
   });
 });
 
@@ -77,13 +95,11 @@ app.delete('/delete/:fileName', (req, res) => {
   const { fileName } = req.params;
   const filePath = path.join('./uploads', fileName);
 
-  // Check if the file exists
   fs.exists(filePath, (exists) => {
     if (!exists) {
       return res.status(404).json({ success: false, message: 'File not found.' });
     }
 
-    // Delete the file
     fs.unlink(filePath, (err) => {
       if (err) {
         console.error('Error deleting file:', err);
