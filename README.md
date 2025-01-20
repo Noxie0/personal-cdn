@@ -34,7 +34,7 @@ A simple web application for uploading, managing, and downloading files. This ap
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/file-cdn.git
+   git clone https://github.com/Noxie0/personal-cdn.git
    cd file-cdn
    ```
 
