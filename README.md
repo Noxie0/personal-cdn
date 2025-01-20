@@ -7,7 +7,7 @@ A simple web application for uploading, managing, and downloading files. This ap
 ## Features
 
 ### 1. **File Upload**
-- Drag and drop or select multiple files for upload.
+- Select multiple files for upload.
 - Automatically renames files with duplicate names by appending a unique identifier (e.g., `file-1.txt`, `file-2.txt`).
 - Supports large files with proper error handling.
 
@@ -34,7 +34,7 @@ A simple web application for uploading, managing, and downloading files. This ap
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/file-cdn.git
+   git clone https://github.com/Noxie0/personal-cdn.git
    cd file-cdn
    ```
 
